@@ -4,7 +4,7 @@ Current version: Ver 1.0
 Author: Kenji Nakajima
 
 <Description>
-This GUI tool is for nework administration work in lab/datacenter.
+This tool is created with the purpose of making nework administration tasks in labs/datacenters slightly more efficient.
 It mainly serves as an access information management tool for your backbone switches
 and access control switches.
 This is especially usefull for lab environments that do not have the telnet protocol
