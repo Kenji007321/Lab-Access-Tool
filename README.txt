@@ -4,7 +4,7 @@ Current version: Ver 1.0
 Author: Kenji Nakajima
 
 <Description>
-This tool is created with the purpose of making nework administration tasks in labs/datacenters slightly more efficient.
+This GUI tool is for nework administration work in lab/datacenter.
 It mainly serves as an access information management tool for your backbone switches
 and access control switches.
 This is especially usefull for lab environments that do not have the telnet protocol
@@ -34,3 +34,4 @@ Conditions for adding new access information are as follows:
 3. 'Host' and 'Name' entry must not be more than 20 characters
 4. 'Host' and 'Port' entry must not contain full-width characters
 5. 'Port' entry must be a number and not be more than 4 digits
+6. Must not have duplicate 'Names' in the same file

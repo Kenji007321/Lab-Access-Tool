@@ -8,12 +8,19 @@ import os
 username = os.getlogin()
 
 connection_triggered = False
-if connection_triggered == True:
-    connection_info = Label()
-    connection_info.place(x=28, y=130)
+connection_info = None
+
+def update_connection_info(ip_address, port):
+    global connection_triggered, connection_info
+
+    if connection_info:
+        connection_info.destroy()
+
+    connection_info = Label(window, text=f"Connection ended\n\nName: '{clicked_name.get()}'  Host: '{ip_address}'  Port: '{str(port).strip()}'", fg="red")
+    connection_info.place(x=0, y=115)
     connection_info.config(bg="lightgrey", font=("Helvetica", 9, "normal"))
-else:
-    pass
+    connection_triggered = True
+
 def open_tera_term(ip_address, port):
     '''Run Tera Term.'''
     global connection_triggered, connection_info
@@ -21,10 +28,9 @@ def open_tera_term(ip_address, port):
     terra_term = [file_path, f"{ip_address}:{port}"]
     
     subprocess.run(terra_term)
-    connection_info = Label(window, text=f"Connection ended. Host: '{ip_address}' Port: '{str(port).strip()}'", fg="red")
-    connection_info.place(x=28, y=130)
-    connection_info.config(bg="lightgrey", font=("Helvetica", 9, "normal"))
-    connection_triggered = True
+    
+    update_connection_info(ip_address, port)
+    
     print(f"Command executed: {terra_term}")
   
 def open_putty(ip_address, port):
@@ -34,17 +40,16 @@ def open_putty(ip_address, port):
     putty = [file_path, '-P', str(port), ip_address]
     
     subprocess.run(putty)
-    connection_info = Label(window, text=f"Connection ended. Host: '{ip_address}' Port: '{str(port).strip()}'", fg="red")
-    connection_info.place(x=28, y=130)
-    connection_info.config(bg="lightgrey", font=("Helvetica", 9, "normal"))
-    connection_triggered = True
+    
+    update_connection_info(ip_address, port)
+    
     print(f"Command executed: {putty}")
 
 def load_data():
     '''Load backbone and access server data'''
     global df_backbone, df_access
     # Load Backbone data
-    backbone_file = pd.read_csv(fr"C:\Users\{username}\path\to\file")
+    backbone_file = pd.read_csv(fr"C:\Users\{username}\path\to\Backbone_List.csv")
     df_backbone = pd.DataFrame(backbone_file)
 
     df_backbone["Port"] = df_backbone["Port"].fillna(0).astype(int)
@@ -52,7 +57,7 @@ def load_data():
     df_backbone["Name"] = df_backbone["Name"].fillna(0).astype(str)
 
     # Load Access Server data
-    access_server_file = pd.read_csv(fr"C:\Users\{username}\path\to\file")
+    access_server_file = pd.read_csv(fr"C:\Users\{username}\path\to\Access_Server_List.csv")
     df_access = pd.DataFrame(access_server_file)
 
     df_access["Port"] = df_access["Port"].fillna(0).replace(0, 22)
@@ -73,7 +78,7 @@ window.bind('<Return>', lambda event: (
 ))
 
 window_width = 450
-window_height = 240
+window_height = 250
 
 screen_width = window.winfo_screenwidth()
 screen_height = window.winfo_screenheight()
@@ -205,7 +210,7 @@ def use_access_server():
     clicked_rack.set("Racks")
     
     # Update combobox values for racks
-    rack_list = list(set(df_backbone["Rack"]))
+    rack_list = list(set(df_access["Rack"]))
     rack_menu['values'] = sorted(rack_list, reverse=True)
     
     # Clear the host menu for Access Server
@@ -219,12 +224,12 @@ def use_access_server():
 def reload_data():
     '''Reloads the df_backbone and df_access data'''
     global df_backbone, df_access
-    df_backbone = pd.read_csv(fr"C:\Users\{username}\path\to\file")
+    df_backbone = pd.read_csv(fr"C:\Users\{username}\path\to\Backbone_List.csv")
     df_backbone["Port"] = df_backbone["Port"].fillna(0).astype(int)
     df_backbone["Host"] = df_backbone["Host"].fillna(0).astype(str)
     df_backbone["Name"] = df_backbone["Name"].fillna(0).astype(str)
 
-    df_access = pd.read_csv(fr"C:\Users\{username}\path\to\file")
+    df_access = pd.read_csv(fr"C:\Users\{username}\path\to\Access_Server_List.csv")
     df_access["Port"] = df_access["Port"].fillna(0).replace(0, 22)
     df_access["Host"] = df_access["Host"].fillna(0).astype(str)
     df_access["Name"] = df_access["Name"].fillna(0).astype(str)
@@ -463,7 +468,7 @@ def remove_from_csv():
             messagebox.showerror("Error", "Selected name not found in Backbone")
             return
         index = selected_row_backbone.index[0]
-        delete_row(fr"C:\Users\{username}\path\to\file", index)
+        delete_row(fr"C:\Users\{username}\path\to\Backbone_List.csv", index)
         messagebox.showinfo(title="Deleted", message=f"Removed '{name_value}' from data file \nHost: {host_value}\nPort: {port_value}")
         
     elif current_data.equals(df_access):
@@ -472,7 +477,7 @@ def remove_from_csv():
             messagebox.showerror("Error", "Selected name not found in Access Server")
             return
         index = selected_row_access.index[0]
-        delete_row(fr"C:\Users\{username}\path\to\file", index)
+        delete_row(fr"C:\Users\{username}\path\to\Access_Server_List.csv", index)
         messagebox.showinfo(title="Deleted", message=f"Removed '{name_value}' from data file \nHost: {host_value}\nPort: {round(port_value)}")
     
     if current_data.equals(df_backbone):
@@ -559,10 +564,10 @@ def add_to_csv():
     elif radio_var.get() == 2 and len(port_entry.get()) == 0:  # Allow empty for Access Server
         
         if selected_value == 1:
-            new_data.to_csv(fr"C:\Users\{username}\path\to\file", mode="a", header=not pd.io.common.file_exists(fr"C:\Users\{username}\path\to\file"))
+            new_data.to_csv(fr"C:\Users\{username}\path\to\Backbone_List.csv", mode="a", header=not pd.io.common.file_exists(fr"C:\Users\{username}\path\to\Backbone_List.csv"))
             messagebox.showinfo(title="Added", message=f"Added '{name_data}' to Backbone file")
         elif selected_value == 2:
-            new_data.to_csv(fr"C:\Users\{username}\path\to\file", mode="a", header=not pd.io.common.file_exists(fr"C:\Users\{username}\path\to\file"))
+            new_data.to_csv(fr"C:\Users\{username}\path\to\Access_Server_List.csv", mode="a", header=not pd.io.common.file_exists(fr"C:\Users\{username}\path\to\Access_Server_List.csv"))
             messagebox.showinfo(title="Added", message=f"Added '{name_data}' to Access Server file")
         
         refresh()
@@ -585,7 +590,7 @@ def add_to_csv():
                         # Overwrite existing duplicate name
                         if name in df_backbone["Name"].to_list():
                             df_backbone.loc[df_backbone["Name"] == name, ["Rack", "Host", "Port", "Name"]] = [rack_data, host_data, port_data, name_data]
-                            df_backbone.to_csv(fr"C:\Users\{username}\path\to\file", mode="w", header=True, index=False)
+                            df_backbone.to_csv(fr"C:\Users\{username}\path\to\Backbone_List.csv", mode="w", header=True, index=False)
                             messagebox.showinfo(title="Updated", message=f"Overwritten '{name_data}' in Backbone file")
                             refresh()
                         is_duplicate = True
@@ -603,7 +608,7 @@ def add_to_csv():
                         # Overwrite existing duplicate name
                         if name in df_access["Name"].to_list():
                             df_access.loc[df_access["Name"] == name, ["Rack", "Host", "Port", "Name"]] = [rack_data, host_data, port_data, name_data]
-                            df_access.to_csv(fr"C:\Users\{username}\path\to\file", mode="w", header=True, index=False)
+                            df_access.to_csv(fr"C:\Users\{username}\path\to\Access_Server_List.csv", mode="w", header=True, index=False)
                             messagebox.showinfo(title="Updated", message=f"Overwritten '{name_data}' in Access Server file")
                             refresh()
                         is_duplicate = True
@@ -611,10 +616,10 @@ def add_to_csv():
 
         if not is_duplicate:
             if selected_value == 1:
-                new_data.to_csv(fr"C:\Users\{username}\path\to\file", mode="a", header=not pd.io.common.file_exists(fr"C:\Users\{username}\path\to\file"))
+                new_data.to_csv(fr"C:\Users\{username}\path\to\Backbone_List.csv", mode="a", header=not pd.io.common.file_exists(fr"C:\Users\{username}\path\to\Backbone_List.csv"))
                 messagebox.showinfo(title="Added", message=f"Added '{name_data}' to Backbone file \nHost: {host_data}\nPort: {port_data}")
             elif selected_value == 2:
-                new_data.to_csv(fr"C:\Users\{username}\path\to\file", mode="a", header=not pd.io.common.file_exists(fr"C:\Users\{username}\path\to\file"))
+                new_data.to_csv(fr"C:\Users\{username}\path\to\Access_Server_List.csv", mode="a", header=not pd.io.common.file_exists(fr"C:\Users\{username}\path\to\Access_Server_List.csv"))
                 messagebox.showinfo(title="Added", message=f"Added '{name_data}' to Access Server file \nHost: {host_data}\nPort: {port_data}")
             
             load_data()
@@ -643,7 +648,7 @@ def main_menu():
     name_menu.bind("<FocusIn>", on_focus_in)
 
     update_button = ttk.Button(window, text="Update", command=open_popup)
-    update_button.grid(column=1, row=2, pady=15)
+    update_button.grid(column=1, row=2, pady=10)
 
     delete_button_focus = False
     add_button_focus = False
