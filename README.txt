@@ -35,3 +35,5 @@ Conditions for adding new access information are as follows:
 4. 'Host' and 'Port' entry must not contain full-width characters
 5. 'Port' entry must be a number and not be more than 4 digits
 6. Must not have duplicate 'Names' in the same file
+
+*The file path for the Backbone and Access Server files must be changed to the correct path.
